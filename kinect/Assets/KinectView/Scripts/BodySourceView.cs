@@ -11,6 +11,9 @@ public class BodySourceView : MonoBehaviour
     private Dictionary<ulong, GameObject> _Bodies = new Dictionary<ulong, GameObject>();
     private BodySourceManager _BodyManager;
     private GameObject cube = null;
+    private double right_hand_x = 0;
+    private double left_hand_x = 0;
+    private double head_y = 0;
 
     private Dictionary<Kinect.JointType, Kinect.JointType> _BoneMap = new Dictionary<Kinect.JointType, Kinect.JointType>()
     {
@@ -110,9 +113,10 @@ public class BodySourceView : MonoBehaviour
                 }
                 
                 RefreshBodyObject(body, _Bodies[body.TrackingId]);
-                Tcheck(body, _Bodies[body.TrackingId]);
+ 
             }
         }
+        //Tcheck();
 
     }
     
@@ -186,149 +190,175 @@ public class BodySourceView : MonoBehaviour
         return new Vector3(joint.Position.X*10, joint.Position.Y*10, joint.Position.Z*10);
     }
 
-    public bool Tcheck(Kinect.Body body, GameObject bodyObject)
+    public bool Tcheck()
     {
-        Vector3 newBodyScales = new Vector3(1, 1, 1);
-        Vector3 newBodyOffsets = new Vector3(0, 0, 0);
-
-        double average = 0;
-        double rightHandX = 0;
-        double leftHandX = 0;
-        double headY = 0;
-        double hipY = 0;
-
-
-        List<Vector3> jointPositions = new List<Vector3>();
-
-        for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
+        if (BodySourceManager != null)
         {
-            Kinect.Joint sourceJoint = body.Joints[jt];
-            Kinect.Joint? targetJoint = null;
 
-            if (_BoneMap.ContainsKey(jt))
-            {
-                targetJoint = body.Joints[_BoneMap[jt]];
-            }
+            _BodyManager = BodySourceManager.GetComponent<BodySourceManager>();
 
-            string jointType = jt.ToString();
-
-            if (jointType == "HandRight")
-            {
-                print(sourceJoint.Position.Y);
-            }
-
-
-            if (jointType == "SpineBase")//身體深度判定(大約1.5m    Z: 2 +-0.2)
-            {
-                if (sourceJoint.Position.Z > 2.2)
-                {
-                    print("離太遠");
-                    return false;
-                }
-                if (sourceJoint.Position.Z < 1.8)
-                {
-                    print("離太近");
-                    return false;
-                }
-                if(sourceJoint.Position.X < -0.2)
-                {
-                    print("太左邊");
-                }
-                if(sourceJoint.Position.X > 0.2)
-                {
-                    print("太右邊");
-                }
-
-                print("剛剛好");
-            }
-            
-            //Y 平均 +-0.05
-            if (jointType == "HandRight" || jointType == "WristRight" || jointType ==  "ElbowRight" || jointType == "HandLeft" || jointType == "WristLeft" || jointType == "ElbowLeft")
-            {
-                //深度判斷
-                if (sourceJoint.Position.Z > 2.2)
-                {
-                    print("手不平");
-                    return false;
-                }
-                else if (sourceJoint.Position.Z < 1.8)
-                {
-                    print("手不平");
-                    return false;
-                }
-                else
-                {
-                    print("手不平");
-                }
-                average += sourceJoint.Position.Y;
-                jointPositions.Add(new Vector3(sourceJoint.Position.X, sourceJoint.Position.Y, sourceJoint.Position.Z));
-
-           
-            }
-
-          
-           
-
-            if (jointType == "HandRight")
-            {
-                rightHandX = sourceJoint.Position.X;
-            }
-
-            if (jointType == "HandLeft")
-            {
-                leftHandX = sourceJoint.Position.X;
-            }
-
-
-
-            if(jointType == "Neck" )
-            {
-                headY = sourceJoint.Position.Y;
-            }
-
-            if (jointType == "SpineBase")
-            {
-                hipY = sourceJoint.Position.Y;
-            }
-
-            
-        }
-
-        //x scale and offset
-
-        double xLength = System.Math.Abs(rightHandX - leftHandX);
-        newBodyScales.x = (float)(2.0f / xLength);
-        newBodyOffsets.x = -(float)((rightHandX + leftHandX) / 2.0f);
-
-
-        //y scale and offset
-
-
-        double yLength = System.Math.Abs(headY - hipY);
-        newBodyScales.y = (float)(2.0f / yLength);
-        newBodyOffsets.y = -(float)((headY + hipY) / 2.0f);
-
-        // z scale and offset
-        newBodyScales.z = 2.0f / (2.2f - 1.8f);
-        newBodyOffsets.z = -2.0f;
-
-
-        average /= 6;
-        for (int i = 0; i < jointPositions.Count; i++)
-        {
-            if (jointPositions[i].y < average-0.05 || jointPositions[i].y > average + 0.05)
-            {
-                print("手不平");
+            if (_BodyManager == null)
                 return false;
+
+            Kinect.Body[] data = _BodyManager.GetData();
+            if (data == null)
+                return false;
+            foreach (var body in data)
+            {
+                if (body == null)
+                {
+                    continue;
+                }
+                if (body.IsTracked)
+                {
+                    Vector3 newBodyScales = new Vector3(1, 1, 1);
+                    Vector3 newBodyOffsets = new Vector3(0, 0, 0);
+
+                    double average = 0;
+                    double rightHandX = 0;
+                    double leftHandX = 0;
+                    double headY = 0;
+                    double hipY = 0;
+
+
+                    List<Vector3> jointPositions = new List<Vector3>();
+
+                    for (Kinect.JointType jt = Kinect.JointType.SpineBase; jt <= Kinect.JointType.ThumbRight; jt++)
+                    {
+                        Kinect.Joint sourceJoint = body.Joints[jt];
+                        Kinect.Joint? targetJoint = null;
+
+                        if (_BoneMap.ContainsKey(jt))
+                        {
+                            targetJoint = body.Joints[_BoneMap[jt]];
+                        }
+
+                        string jointType = jt.ToString();
+
+                        if (jointType == "HandRight")
+                        {
+                            //print(sourceJoint.Position.Y);
+                        }
+
+
+                        if (jointType == "SpineBase")//身體深度判定(大約1.5m    Z: 2 +-0.2)
+                        {
+                            if (sourceJoint.Position.Z > 2.2)
+                            {
+                                //print("離太遠");
+                                return false;
+                            }
+                            if (sourceJoint.Position.Z < 1.8)
+                            {
+                                //print("離太近");
+                                return false;
+                            }
+                            if (sourceJoint.Position.X < -0.2)
+                            {
+                                //print("太左邊");
+                            }
+                            if (sourceJoint.Position.X > 0.2)
+                            {
+                                //print("太右邊");
+                            }
+
+                            //print("剛剛好");
+                        }
+
+                        //Y 平均 +-0.05
+                        if (jointType == "HandRight" || jointType == "WristRight" || jointType == "ElbowRight" || jointType == "HandLeft" || jointType == "WristLeft" || jointType == "ElbowLeft")
+                        {
+                            //深度判斷
+                            if (sourceJoint.Position.Z > 2.2)
+                            {
+                                //print("手不平");
+                                return false;
+                            }
+                            else if (sourceJoint.Position.Z < 1.8)
+                            {
+                                //print("手不平");
+                                return false;
+                            }
+                            else
+                            {
+                                //print("手不平");
+                            }
+                            average += sourceJoint.Position.Y;
+                            jointPositions.Add(new Vector3(sourceJoint.Position.X, sourceJoint.Position.Y, sourceJoint.Position.Z));
+
+
+                        }
+
+
+
+
+                        if (jointType == "HandRight")
+                        {
+                            rightHandX = sourceJoint.Position.X;
+                            right_hand_x = rightHandX;
+                        }
+
+                        if (jointType == "HandLeft")
+                        {
+                            leftHandX = sourceJoint.Position.X;
+                            left_hand_x = leftHandX;
+                        }
+
+
+
+                        if (jointType == "Neck")
+                        {
+                            headY = sourceJoint.Position.Y;
+                            head_y = headY;
+                        }
+
+                        if (jointType == "SpineBase")
+                        {
+                            hipY = sourceJoint.Position.Y;
+                        }
+
+
+                    }
+
+                    //x scale and offset
+
+                    double xLength = System.Math.Abs(rightHandX - leftHandX);
+                    newBodyScales.x = (float)(2.0f / xLength);
+                    newBodyOffsets.x = -(float)((rightHandX + leftHandX) / 2.0f);
+
+
+                    //y scale and offset
+
+
+                    double yLength = System.Math.Abs(headY - hipY);
+                    newBodyScales.y = (float)(2.0f / yLength);
+                    newBodyOffsets.y = -(float)((headY + hipY) / 2.0f);
+
+                    // z scale and offset
+                    newBodyScales.z = 2.0f / (2.2f - 1.8f);
+                    newBodyOffsets.z = -2.0f;
+
+
+                    average /= 6;
+                    for (int i = 0; i < jointPositions.Count; i++)
+                    {
+                        if (jointPositions[i].y < average - 0.05 || jointPositions[i].y > average + 0.05)
+                        {
+                            //print("手不平");
+                            return false;
+                        }
+                    }
+
+                    print("T字形");
+
+                    bodyScales = newBodyScales;
+                    bodyOffsets = newBodyOffsets;
+
+                    return true;
+                }
             }
         }
-
-        print("T字形");
-
-        bodyScales = newBodyScales;
-        bodyOffsets = newBodyOffsets;
-
-        return true;
+        return false;
     }
 
     public Vector3 GetJointPosition(Kinect.JointType jointType)
@@ -365,5 +395,59 @@ public class BodySourceView : MonoBehaviour
             }
         }
         return Vector3.zero;
+    }
+
+    public bool OutOfRange()
+    {
+        if (BodySourceManager != null)
+        {
+            _BodyManager = BodySourceManager.GetComponent<BodySourceManager>();
+
+            if (_BodyManager != null)
+            {
+
+                Kinect.Body[] data = _BodyManager.GetData();
+                if (data != null)
+                {
+                    foreach (var body in data)
+                    {
+                        if (body == null)
+                        {
+                            continue;
+                        }
+                        if (body.IsTracked)
+                        {
+                            Kinect.JointType jointType = Kinect.JointType.SpineBase;
+                            var joints = body.Joints;
+                            var joint = joints[jointType];
+
+                            //print(joint.Position.X);
+
+                            //z check
+                            if (joint.Position.Z < 1.8f || joint.Position.Z > 2.2f)
+                                return false;
+
+                            //x check
+                            if (joint.Position.X > right_hand_x || joint.Position.X < left_hand_x)
+                                return false;
+
+                            jointType = Kinect.JointType.SpineBase;
+
+
+                            joint = joints[jointType];
+
+                            //y check
+                            if (joint.Position.Y > head_y)
+                                return false;
+
+                            return true;
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }

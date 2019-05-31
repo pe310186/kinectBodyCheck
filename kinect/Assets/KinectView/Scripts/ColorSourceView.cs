@@ -12,7 +12,7 @@ public class ColorSourceView : MonoBehaviour
         Canvas canvas = FindObjectOfType<Canvas>();
         float h = canvas.GetComponent<RectTransform>().rect.height;
         float w = canvas.GetComponent<RectTransform>().rect.width;
-        transform.localScale = new Vector3(w,h,1);
+        transform.localScale = new Vector3(w-150,h-150,1);
         gameObject.GetComponent<Renderer>().material.SetTextureScale("_MainTex", new Vector2(-1, 1));
     }
     
@@ -31,5 +31,13 @@ public class ColorSourceView : MonoBehaviour
         }
         
         gameObject.GetComponent<Renderer>().material.mainTexture = _ColorManager.GetColorTexture();
+    }
+
+
+    //遊玩模式
+    public void playMode()
+    {
+        transform.localScale = new Vector3(200, 200, 1);
+        gameObject.GetComponent<Renderer>().material.SetTextureScale("_MainTex", new Vector2(-1, 1));
     }
 }
