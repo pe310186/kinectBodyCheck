@@ -11,8 +11,10 @@ public class testBody : MonoBehaviour {
     BodySourceView bodySource;
     GameObject text;
     float time;
+    float dot = 0;
 
     bool T_check_flag = false;
+    bool loadingFlag = true;
     // Use this for initialization
     void Start () {
         bodySource = GetComponent<BodySourceView>();
@@ -23,8 +25,9 @@ public class testBody : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (T_check_flag)
+        if (T_check_flag && time == 0)
         {
+            time = 0;
             if (!bodySource.OutOfRange())//出界
             {
                 canvas.SetActive(true);
@@ -47,24 +50,28 @@ public class testBody : MonoBehaviour {
             if (T_check_flag)
             {
                 Vector3 basePosition = bodySource.GetJointPosition(Kinect.JointType.SpineBase);
-                float time = 3.0f;
-                int dot = 1;
-                while (time > 0)
+                if(time == 0)
+                    time = 3.0f;
+                
+                if (time > 0)
                 {
                     time -= Time.deltaTime;
-                    dot++;
-                    if (dot > 3)
-                       dot = 1;
+                    if (time < 0)
+                        time = 0;
+                    dot+= 2 * Time.deltaTime;
+                    
                     text.GetComponent<UnityEngine.UI.Text>().text = "讀取中";
                     for(int i = 0; i < dot; i++)
                     {
                         text.GetComponent<UnityEngine.UI.Text>().text += ".";
                     }
 
+                    if (dot > 3)
+                        dot = 0;
+
                     if (!bodySource.Tcheck())
                     {
                         T_check_flag = false;
-                        break;
                     }
 
                     Vector3 tmpPosition = bodySource.GetJointPosition(Kinect.JointType.SpineBase);
@@ -72,10 +79,13 @@ public class testBody : MonoBehaviour {
                     if (System.Math.Abs(basePosition.x - tmpPosition.x) > 0.5 || System.Math.Abs(basePosition.y - tmpPosition.y) > 0.5 || System.Math.Abs(basePosition.z - tmpPosition.z) > 0.5)
                     {
                         T_check_flag = false;
-                        break;
                     }
                 }
             }
-        }     
+            else
+            {
+                time = 3.0f;
+            }
+        }
     }
 }

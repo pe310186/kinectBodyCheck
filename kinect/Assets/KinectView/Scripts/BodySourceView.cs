@@ -241,47 +241,47 @@ public class BodySourceView : MonoBehaviour
                         }
 
 
-                        if (jointType == "SpineBase")//身體深度判定(大約1.5m    Z: 2 +-0.2)
+                        if (jointType == "SpineBase")//身體深度判定(大約1.5m    Z: 2 +-0.5)
                         {
-                            if (sourceJoint.Position.Z > 2.2)
+                            if (sourceJoint.Position.Z > 2.5)
                             {
-                                //print("離太遠");
+                                print("離太遠");
                                 return false;
                             }
-                            if (sourceJoint.Position.Z < 1.8)
+                            if (sourceJoint.Position.Z < 1.5)
                             {
-                                //print("離太近");
+                                print("離太近");
                                 return false;
                             }
                             if (sourceJoint.Position.X < -0.2)
                             {
-                                //print("太左邊");
+                                print("太左邊");
                             }
                             if (sourceJoint.Position.X > 0.2)
                             {
-                                //print("太右邊");
+                                print("太右邊");
                             }
 
-                            //print("剛剛好");
+                            print("剛剛好");
                         }
 
                         //Y 平均 +-0.05
                         if (jointType == "HandRight" || jointType == "WristRight" || jointType == "ElbowRight" || jointType == "HandLeft" || jointType == "WristLeft" || jointType == "ElbowLeft")
                         {
                             //深度判斷
-                            if (sourceJoint.Position.Z > 2.2)
+                            if (sourceJoint.Position.Z > 2.5)
                             {
-                                //print("手不平");
+                                print("手不平");
                                 return false;
                             }
-                            else if (sourceJoint.Position.Z < 1.8)
+                            else if (sourceJoint.Position.Z < 1.5)
                             {
-                                //print("手不平");
+                                print("手不平");
                                 return false;
                             }
                             else
                             {
-                                //print("手不平");
+                                print("手不平");
                             }
                             average += sourceJoint.Position.Y;
                             jointPositions.Add(new Vector3(sourceJoint.Position.X, sourceJoint.Position.Y, sourceJoint.Position.Z));
@@ -328,7 +328,7 @@ public class BodySourceView : MonoBehaviour
                     {
                         if (jointPositions[i].y < average - 0.05 || jointPositions[i].y > average + 0.05)
                         {
-                            //print("手不平");
+                            print("手不平");
                             return false;
                         }
                     }
@@ -349,7 +349,7 @@ public class BodySourceView : MonoBehaviour
 
 
                     // z scale and offset
-                    newBodyScales.z = 2.0f / (2.2f - 1.8f);
+                    newBodyScales.z = 2.0f / (2.5f - 1.5f);
                     newBodyOffsets.z = -2.0f;
 
 
@@ -430,7 +430,7 @@ public class BodySourceView : MonoBehaviour
                             //print(joint.Position.X);
 
                             //z check
-                            if (joint.Position.Z < 1.8f || joint.Position.Z > 2.2f)
+                            if (joint.Position.Z < 1.5f || joint.Position.Z > 2.5f)
                                 return false;
 
                             //x check
