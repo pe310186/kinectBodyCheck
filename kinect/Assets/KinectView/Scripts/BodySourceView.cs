@@ -320,6 +320,19 @@ public class BodySourceView : MonoBehaviour
 
                     }
 
+                    
+
+
+                    average /= 6;
+                    for (int i = 0; i < jointPositions.Count; i++)
+                    {
+                        if (jointPositions[i].y < average - 0.05 || jointPositions[i].y > average + 0.05)
+                        {
+                            //print("手不平");
+                            return false;
+                        }
+                    }
+
                     //x scale and offset
 
                     double xLength = System.Math.Abs(rightHandX - leftHandX);
@@ -334,25 +347,18 @@ public class BodySourceView : MonoBehaviour
                     newBodyScales.y = (float)(2.0f / yLength);
                     newBodyOffsets.y = -(float)((headY + hipY) / 2.0f);
 
+
                     // z scale and offset
                     newBodyScales.z = 2.0f / (2.2f - 1.8f);
                     newBodyOffsets.z = -2.0f;
 
 
-                    average /= 6;
-                    for (int i = 0; i < jointPositions.Count; i++)
-                    {
-                        if (jointPositions[i].y < average - 0.05 || jointPositions[i].y > average + 0.05)
-                        {
-                            //print("手不平");
-                            return false;
-                        }
-                    }
-
                     print("T字形");
 
                     bodyScales = newBodyScales;
                     bodyOffsets = newBodyOffsets;
+
+
 
                     return true;
                 }
@@ -384,7 +390,7 @@ public class BodySourceView : MonoBehaviour
                             var joints = body.Joints;
                             var joint = joints[jointType];
 
-                            Vector3 res = new Vector3(bodyOffsets.x + joint.Position.X * bodyScales.x, bodyOffsets.y + joint.Position.Y * bodyScales.y, bodyOffsets.z + joint.Position.Z * bodyScales.z);
+                            Vector3 res = new Vector3((bodyOffsets.x + joint.Position.X) * bodyScales.x, (bodyOffsets.y + joint.Position.Y) * bodyScales.y, (bodyOffsets.z + joint.Position.Z) * bodyScales.z);
 
                             return res;
 
